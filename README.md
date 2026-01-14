@@ -1,5 +1,6 @@
 ### The Idea
 You know how in a web browser, you can click the right mouse button and there is an option in the menu to go back to the previous page? I thought it would be cool if you could do that in Windows File Explorer too. (Not very useful, but fun.)
+<img width="357" height="128" alt="BackBut" src="https://github.com/user-attachments/assets/85ef1d43-722e-47e8-ac6d-7a51a334c061" />
 
 ### The Plan
 To accomplish this, we need two main things: 
@@ -76,6 +77,8 @@ Now that we’re got a program to run when the menu is clicked, we need to setup
     This key must be named ***command***. 
 6.	Select ***command***, and on the right pane double-click (Default) to edit it. 
 7.	Here is where we need to tell it where our program is that will run when the BackFolder is pressed. Set it to the path where our program is. Be sure to wrap it in quotes if there are spaces in the file path.
+
+<img width="701" height="129" alt="Re" src="https://github.com/user-attachments/assets/bb6158d5-5eba-4876-adc3-519a19167e15" />
 
 ### The Result
 Let's try it. Open File Explorer and nagivate to a few places so that you have a history. 
