@@ -126,32 +126,17 @@ For example:
 That's it. No reboot is required.
 
 ---
-## Adding the Context Menu
+## The Result
 
-Now we just need to tell File Explorer to run our program when the user clicks a menu item.
+Open File Explorer and browse through several folders so you have some navigation history.
 
-> **Warning:** Editing the Windows Registry incorrectly can cause problems. Proceed carefully.
+Now right-click in an empty area of the folder background.
 
-1. Run **Regedit**.
-2. Navigate to:
+You should see your new **BackFolder** command in the context menu.
 
-   ```
-   HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell
-   ```
+Click it, and Explorer immediately navigates back to the previous folder—the same as if you had pressed **Alt + Left Arrow**.
 
-3. Right-click **shell** and choose **New → Key**.
-4. Name the new key **BackFolder** (or whatever text you want displayed in the menu).
-5. Right-click **BackFolder** and create another key named **command**.
-6. Select the **command** key.
-7. Double-click **(Default)** in the right pane.
-8. Enter the full path to your executable, enclosing it in quotes if the path contains spaces.
-
-For example:
-
-```
-"C:\Tools\BackFolder.exe"
-```
-
+It's a tiny utility, but it's a fun example of how easily you can extend File Explorer with a little Registry editing and a few lines of Win32 code.
 That's it. No reboot is required.
 
 ---
