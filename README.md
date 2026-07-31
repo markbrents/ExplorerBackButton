@@ -1,28 +1,60 @@
 ### The Idea
-You know how in a web browser, you can click the right mouse button and there is an option in the menu to go back to the previous page? I thought it would be cool if you could do that in Windows File Explorer too. (Not very useful, but fun.)
-<img width="357" height="128" alt="BackBut" src="https://github.com/user-attachments/assets/85ef1d43-722e-47e8-ac6d-7a51a334c061" />
+
+Web browsers have had a **Back** button forever. You can even right-click on a page and choose **Back** from the context menu.
+
+That got me wondering...
+
+Wouldn't it be fun if Windows File Explorer had a similar option? Right-click in a folder, click **Back**, and Explorer would navigate to the previous folder.
+
+Is it particularly useful? Probably not.
+
+Is it a fun little Windows hack? Absolutely.
+
+---
 
 ### The Plan
-To accomplish this, we need two main things: 
-1.	We need to add a menu item to the right-click menu in Explorer. Clicking this should run a program. 
-2.	We need to create this program and have it talk to Explorer and get it to go back to its previous location. 
 
-### The Program
-Let’s start with the program. 
+To make this work, we need two things:
 
-We need a way to find the instance of File Explorer that our program launched from. Since there could be several of them, we have to find the right one. My initial attempt was to enumerate all the Explorer windows and find the one that is the foreground window. 
+1. Add a custom item to File Explorer's right-click menu.
+2. Have that menu item launch a program that tells Explorer to navigate back.
 
-Turns out this was way over thinking it. When our program runs, it will be a console program and won’t have a window. This means the File Explorer window that launched us will be the foreground window. And that means it will have focus. We just need to send keys to the foreground window.
+The first part is just a Registry change.
 
-### The Keys
-So, what keys do we send to it? Turns out that if you press Alt + Left Arrow, Explorer will go back to the previous folder. We simply need to figure out how to send this combination. 
+The second part turned out to be more interesting.
 
-My initial attempts involved trying to use the Windows API SendMessage to send keypress messages. I then found out I could just use the keybd_event to accomplish the task.
+---
 
-I was able to get it to work using keybd_event. However, it turns out that the [keybd_event](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-keybd_event) call is depreciated.  I should have used [SendInput](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-sendinput). (Lesson: double-check everything AI tells you.)
+## Writing the Program
 
-So, one rewrite later and we have: 
-```
+The biggest challenge was figuring out **which File Explorer window** launched our program.
+
+Since users can have several Explorer windows open, my first thought was to enumerate every Explorer window and find the one that currently had focus.
+
+That turned out to be completely unnecessary.
+
+Our utility is a simple console application and never creates a window of its own. When it starts, the File Explorer window that launched it is still the foreground window. That means we can simply retrieve the foreground window and send the appropriate keyboard shortcut to it.
+
+Much simpler.
+
+---
+
+## Sending the Shortcut
+
+So what keyboard shortcut makes Explorer go back?
+
+**Alt + Left Arrow**
+
+The next question was how to send that key combination.
+
+My first attempt used the Windows API `SendMessage()` to simulate key presses. After a little searching, I discovered `keybd_event()`, which worked perfectly.
+
+Unfortunately, I later learned that `keybd_event()` has been deprecated. The modern approach is to use `SendInput()` instead.
+
+> **Lesson learned:** Always verify what AI tells you before shipping code.
+
+Here's the final version: 
+```cpp
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 #include <windows.h>
@@ -65,25 +97,63 @@ int main()
 }
 ```
 
-### The Menu
-Now that we’re got a program to run when the menu is clicked, we need to setup the menu. 
+## Adding the Context Menu
 
-1.	Run Regedit. Usual disclaimers apply.
-2.	Go to HKEY_CURRENT_USER\Software\Classes\directory\Background\shell
-3.	Right-click shell and click New -> Key.
-    The name of the key will be the name that shows up in the menu. 
-    For our example, we’ll use “BackFolder”
-5.	Next, right-click “BackFolder” and select New -> Key to create a sub key. 
-    This key must be named ***command***. 
-6.	Select ***command***, and on the right pane double-click (Default) to edit it. 
-7.	Here is where we need to tell it where our program is that will run when the BackFolder is pressed. Set it to the path where our program is. Be sure to wrap it in quotes if there are spaces in the file path.
+Now we just need to tell File Explorer to run our program when the user clicks a menu item.
 
-<img width="701" height="129" alt="Re" src="https://github.com/user-attachments/assets/bb6158d5-5eba-4876-adc3-519a19167e15" />
+> **Warning:** Editing the Windows Registry incorrectly can cause problems. Proceed carefully.
 
-### The Result
-Let's try it. Open File Explorer and nagivate to a few places so that you have a history. 
-Now Right-click in a blank area in the right file pane. 
-You should see the “BackFolder” entry. 
-Click it and you should be taken back to the previous folder. 
+1. Run **Regedit**.
+2. Navigate to:
+
+   ```
+   HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell
+   ```
+
+3. Right-click **shell** and choose **New → Key**.
+4. Name the new key **BackFolder** (or whatever text you want displayed in the menu).
+5. Right-click **BackFolder** and create another key named **command**.
+6. Select the **command** key.
+7. Double-click **(Default)** in the right pane.
+8. Enter the full path to your executable, enclosing it in quotes if the path contains spaces.
+
+For example:
+
+```
+"C:\Tools\BackFolder.exe"
+```
+
+That's it. No reboot is required.
+
+---
+## Adding the Context Menu
+
+Now we just need to tell File Explorer to run our program when the user clicks a menu item.
+
+> **Warning:** Editing the Windows Registry incorrectly can cause problems. Proceed carefully.
+
+1. Run **Regedit**.
+2. Navigate to:
+
+   ```
+   HKEY_CURRENT_USER\Software\Classes\Directory\Background\shell
+   ```
+
+3. Right-click **shell** and choose **New → Key**.
+4. Name the new key **BackFolder** (or whatever text you want displayed in the menu).
+5. Right-click **BackFolder** and create another key named **command**.
+6. Select the **command** key.
+7. Double-click **(Default)** in the right pane.
+8. Enter the full path to your executable, enclosing it in quotes if the path contains spaces.
+
+For example:
+
+```
+"C:\Tools\BackFolder.exe"
+```
+
+That's it. No reboot is required.
+
+---
 
 
