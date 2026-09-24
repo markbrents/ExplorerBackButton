@@ -53,6 +53,12 @@ Unfortunately, I later learned that `keybd_event()` has been deprecated. The mod
 
 > **Lesson learned:** Always verify what AI tells you before shipping code.
 
+We have to send four keypresses in the right order:
+- Alt Down
+- Left Arrow Down
+- Left Arrow Up
+- Alt Up
+
 Here's the final version: 
 ```cpp
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
